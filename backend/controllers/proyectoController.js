@@ -44,8 +44,6 @@ const obtenerProyecto = async (req, res) => {
 const editarProyecto = async (req, res) => {
   const { id } = req.params;
 
-  console.log(id);
-
   const proyecto = await Proyecto.findById(id);
 
   if (!proyecto) {

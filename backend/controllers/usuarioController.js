@@ -138,8 +138,6 @@ const nuevoPassword = async (req, res) => {
     const error = new Error('Token no válido');
     return res.status(404).json({ msg: error.message });
   }
-
-  console.log(token, password);
 };
 
 const perfil = async (req, res) => {
