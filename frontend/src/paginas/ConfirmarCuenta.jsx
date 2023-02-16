@@ -1,6 +1,41 @@
-import { Link } from 'react-router-dom';
-
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import axios from 'axios';
+import Alerta from '../components/Alerta';
 const ConfirmarCuenta = () => {
+  const params = useParams();
+  const { token } = params;
+  const [alerta, setAlerta] = useState({});
+  const [cuentaConfirmada, setCuentaConfirmada] = useState(false);
+
+  useEffect(() => {
+    const confirmarCuenta = async () => {
+      //TODO: Mover hacia un cliente axios
+      try {
+        const url = `${
+          import.meta.env.VITE_BACKEND_URL
+        }/api/usuarios/confirmar/${token}`;
+        const { data } = await axios(url);
+
+        setAlerta({
+          msg: data.msg,
+          error: false,
+        });
+
+        setCuentaConfirmada(true);
+      } catch (error) {
+        setAlerta({
+          msg: error.response.data.msg,
+          error: true,
+        });
+      }
+    };
+
+    confirmarCuenta();
+  }, []);
+
+  const { msg } = alerta;
+
   return (
     <>
       <h1 className='text-sky-600 font-black text-6xl capitalize'>
@@ -8,44 +43,17 @@ const ConfirmarCuenta = () => {
         <span className='text-slate-700'>proyectos</span>
       </h1>
 
-      <form className='my-10 bg-white shadow rounded-lg px-10 py-5'>
-        <div className='my-5'>
-          <label
-            className='uppercase text-gray-600 block text-xl font-bold'
-            htmlFor='password'
+      <div className='mt-20 md:mt-10 shadow-lg px-5 py-10 rounded-xl bg-white'>
+        {msg && <Alerta alerta={alerta} />}
+        {cuentaConfirmada && (
+          <Link
+            to='/'
+            className='block text-center my-2 text-slate-500 uppercase text-sm'
           >
-            Nuevo Password
-          </label>
-          <input
-            id='password'
-            type='password'
-            placeholder='Escribe tu nuevo password'
-            className='w-full mt-3 p-3 border rounded-xl bg-gray-50'
-          />
-        </div>
-
-        <input
-          type='submit'
-          value='Reestablecer Password'
-          className='w-full mt-3 p-3 mb-3 border rounded-xl bg-sky-600 text-white uppercase font-bold hover:cursor-pointer hover:bg-sky-700 transition-colors'
-        />
-      </form>
-
-      <nav className='lg:flex lg:justify-between'>
-        <Link
-          to='/'
-          className='block text-center my-2 text-slate-500 uppercase text-sm'
-        >
-          ¿Tienes una cuenta? Inicia Sesión
-        </Link>
-
-        <Link
-          to='/olvide-password'
-          className='block text-center my-2 text-slate-500 uppercase text-sm'
-        >
-          Olvide mi password
-        </Link>
-      </nav>
+            Inicia Sesión
+          </Link>
+        )}
+      </div>
     </>
   );
 };
