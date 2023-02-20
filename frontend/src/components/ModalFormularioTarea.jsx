@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 const PRIORIDAD = ['Baja', 'Media', 'Alta'];
 
 const ModalFormularioTarea = () => {
+  const [id, setId] = useState('');
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [prioridad, setPrioridad] = useState('');
@@ -18,9 +19,26 @@ const ModalFormularioTarea = () => {
     mostrarAlerta,
     alerta,
     submitTarea,
+    tarea,
   } = useProyectos();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (tarea?._id) {
+      setId(tarea._id);
+      setNombre(tarea.nombre);
+      setDescripcion(tarea.descripcion);
+      setFechaEntrega(tarea.fechaEntrega.split('T')[0]);
+      setPrioridad(tarea.prioridad);
+      return;
+    }
+    setId('');
+    setNombre('');
+    setDescripcion('');
+    setPrioridad('');
+    setFechaEntrega('');
+  }, [tarea]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if ([nombre, descripcion, prioridad, fechaEntrega].includes('')) {
@@ -31,13 +49,20 @@ const ModalFormularioTarea = () => {
       return;
     }
 
-    submitTarea({
+    await submitTarea({
+      id,
       nombre,
       descripcion,
       prioridad,
       fechaEntrega,
       proyecto: params.id,
     });
+
+    setId('');
+    setNombre('');
+    setDescripcion('');
+    setPrioridad('');
+    setFechaEntrega('');
   };
 
   const { msg } = alerta;
@@ -107,7 +132,7 @@ const ModalFormularioTarea = () => {
                     as='h3'
                     className='text-lg leading-6 font-bold text-gray-900'
                   >
-                    Crear Tarea
+                    {id ? 'Editar Tarea' : 'Nueva Tarea'}
                   </Dialog.Title>
 
                   {msg && <Alerta alerta={alerta} />}
@@ -185,7 +210,7 @@ const ModalFormularioTarea = () => {
                     <input
                       type='submit'
                       className='text-sm bg-sky-600 hover:bg-sky-700 w-full p-3 text-white uppercase font-bold cursor-pointer transition-colors rounded'
-                      value='Crear Tarea'
+                      value={id ? 'Editar Tarea' : 'Crear Tarea'}
                     />
                   </form>
                 </div>
