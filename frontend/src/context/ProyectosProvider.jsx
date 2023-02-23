@@ -15,6 +15,7 @@ const ProyectosProvider = ({ children }) => {
   const [colaborador, setColaborador] = useState({});
   const [modalEliminarColaborador, setModalEliminarColaborador] =
     useState(false);
+  const [buscador, setBuscador] = useState(false);
 
   const navigate = useNavigate();
 
@@ -34,10 +35,15 @@ const ProyectosProvider = ({ children }) => {
         const { data } = await clienteAxios('/proyectos', config);
         setProyectos(data);
       } catch (error) {
+        navigate('/proyectos');
         setAlerta({
           msg: error.response.data.msg,
           error: true,
         });
+
+        setTimeout(() => {
+          setAlerta({});
+        }, 2000);
       }
     };
 
@@ -143,8 +149,12 @@ const ProyectosProvider = ({ children }) => {
 
       const { data } = await clienteAxios.get(`/proyectos/${id}`, config);
       setProyecto(data);
-    } catch (e) {
-      console.log(e);
+      setAlerta({});
+    } catch (error) {
+      setAlerta({
+        msg: error.response.data.msg,
+        error: true,
+      });
     } finally {
       setCargando(false);
     }
@@ -328,6 +338,10 @@ const ProyectosProvider = ({ children }) => {
         msg: error.response.data.msg,
         error: true,
       });
+
+      setTimeout(() => {
+        setAlerta({});
+      }, 2000);
     } finally {
       setCargando(false);
     }
@@ -366,6 +380,9 @@ const ProyectosProvider = ({ children }) => {
         msg: error.response.data.msg,
         error: true,
       });
+      setTimeout(() => {
+        setAlerta({});
+      }, 2000);
     }
   };
 
@@ -415,6 +432,42 @@ const ProyectosProvider = ({ children }) => {
     }
   };
 
+  const completarTarea = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const { data } = await clienteAxios.post(
+        `/tareas/estado/${id}`,
+        {},
+        config
+      );
+
+      const proyectoActualizado = { ...proyecto };
+
+      proyectoActualizado.tareas = proyectoActualizado.tareas.map(
+        (tareaState) => (tareaState._id === data._id ? data : tareaState)
+      );
+
+      setProyecto(proyectoActualizado);
+      setTarea({});
+      setAlerta({});
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const handleBuscador = () => {
+    setBuscador(!buscador);
+  };
+
   return (
     <ProyectosContext.Provider
       value={{
@@ -427,6 +480,7 @@ const ProyectosProvider = ({ children }) => {
         modalEliminarTarea,
         colaborador,
         modalEliminarColaborador,
+        buscador,
 
         mostrarAlerta,
         submitProyecto,
@@ -441,6 +495,8 @@ const ProyectosProvider = ({ children }) => {
         agregarColaborador,
         handleModalEliminarColaborador,
         eliminarColaborador,
+        completarTarea,
+        handleBuscador,
       }}
     >
       {children}

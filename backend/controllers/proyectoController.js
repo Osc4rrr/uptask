@@ -2,10 +2,9 @@ import Proyecto from '../models/Proyecto.js';
 import Usuario from '../models/Usuario.js';
 
 const obtenerProyectos = async (req, res) => {
-  const proyectos = await Proyecto.find()
-    .where('creador')
-    .equals(req.usuario)
-    .select('-tareas');
+  const proyectos = await Proyecto.find({
+    $or: [{ creador: req.usuario._id }, { colaboradores: req.usuario._id }],
+  }).select('-tareas');
 
   res.json(proyectos);
 };
@@ -26,7 +25,10 @@ const obtenerProyecto = async (req, res) => {
   const { id } = req.params;
 
   const proyecto = await Proyecto.findById(id)
-    .populate('tareas')
+    .populate({
+      path: 'tareas',
+      populate: { path: 'completado', select: 'nombre' },
+    })
     .populate('colaboradores', 'nombre email');
 
   if (!proyecto) {
@@ -34,7 +36,12 @@ const obtenerProyecto = async (req, res) => {
     return res.status(404).json({ msg: error.message });
   }
 
-  if (proyecto.creador.toString() !== req.usuario._id.toString()) {
+  if (
+    proyecto.creador.toString() !== req.usuario._id.toString() &&
+    !proyecto.colaboradores.some(
+      (colaborador) => colaborador._id.toString() === req.usuario._id.toString()
+    )
+  ) {
     const error = new Error('Acción no permitida');
     return res.status(404).json({ msg: error.message });
   }

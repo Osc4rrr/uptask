@@ -29,7 +29,6 @@ const AuthProvider = ({ children }) => {
         const { data } = await clienteAxios('/usuarios/perfil', config);
 
         setAuth(data);
-        navigate('/proyectos');
       } catch (error) {
         console.log(error);
         setAuth({});
