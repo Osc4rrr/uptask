@@ -1,31 +1,69 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import useProyectos from '../hooks/useProyectos';
 import useAdmin from '../hooks/useAdmin';
 import ModalFormularioTarea from '../components/ModalFormularioTarea';
 import Tarea from '../components/Tarea';
 import ModalEliminarTarea from '../components/ModalEliminarTarea';
-import Alerta from '../components/Alerta';
 import Colaborador from '../components/Colaborador';
 import ModalEliminarColaborador from '../components/ModalEliminarColaborador';
+import io from 'socket.io-client';
+
+let socket;
 
 const Proyecto = () => {
   const params = useParams();
   const { id } = params;
-  const { obtenerProyecto, proyecto, cargando, handleModalTarea, alerta } =
-    useProyectos();
+  const {
+    obtenerProyecto,
+    proyecto,
+    cargando,
+    handleModalTarea,
+    alerta,
+    submitTareasProyecto,
+    eliminarTareaProyecto,
+    actualizarTareaProyecto,
+    cambiarEstadoTarea,
+  } = useProyectos();
 
   const admin = useAdmin();
-
-  const [modal, setModal] = useState(false);
 
   useEffect(() => {
     obtenerProyecto(id);
   }, []);
 
-  const { nombre, descripcion } = proyecto;
+  useEffect(() => {
+    socket = io(import.meta.env.VITE_BACKEND_URL);
+    socket.emit('abrir proyecto', params.id);
+  }, []);
 
-  const { msg } = alerta;
+  useEffect(() => {
+    socket.on('tarea-agregada', (tareaNueva) => {
+      if (tareaNueva.proyecto === proyecto._id) {
+        submitTareasProyecto(tareaNueva);
+      }
+    });
+
+    socket.on('tarea-eliminada', (tareaEliminada) => {
+      if (tareaEliminada.proyecto === proyecto._id) {
+        eliminarTareaProyecto(tareaEliminada);
+      }
+    });
+
+    socket.on('tarea-actualizada', (tareaEditada) => {
+      if (tareaEditada.proyecto._id === proyecto._id) {
+        actualizarTareaProyecto(tareaEditada);
+      }
+    });
+
+    socket.on('estado-cambiado', (tareaEditada) => {
+      if (tareaEditada.proyecto._id === proyecto._id) {
+        cambiarEstadoTarea(tareaEditada);
+      }
+    });
+  });
+
+  const { nombre } = proyecto;
 
   if (cargando) return 'cargando...';
 

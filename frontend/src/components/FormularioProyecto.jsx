@@ -20,7 +20,6 @@ const FormularioProyecto = () => {
       setFechaEntrega(proyecto.fechaEntrega?.split('T')[0]);
       setCliente(proyecto.cliente);
     } else {
-      console.log('nuevo');
     }
   }, [params]);
 
